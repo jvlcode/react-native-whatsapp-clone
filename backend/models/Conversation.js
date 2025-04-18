@@ -13,6 +13,8 @@ const conversationSchema = new mongoose.Schema({
         of: Number,
         default: {}
     }
+}, {
+    timestamps: true
 })
 
 export default mongoose.model("Conversation", conversationSchema)

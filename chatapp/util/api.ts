@@ -33,3 +33,25 @@ export const saveUser = async (formData) => {
         console.log("saveUser API error",error)
     }
 }
+
+export const fetchChats = async (userId) => {
+    try {
+        const response = await axios.get(`${API_URL}/conversations/${userId}`)
+        return response.data
+    } catch (error) {
+        console.log(error,'response_data')
+        console.log("fetchUser API error", error)
+    }
+}
+
+export const deleteChat = async (ids) => {
+    try {
+        const response = await axios.delete(`${API_URL}/conversations`, {
+            data: { ids }
+        })
+        return response.data
+    } catch (error) {
+        console.log(error,'response_data')
+        console.log("deleteChat  API error", error)
+    }
+}

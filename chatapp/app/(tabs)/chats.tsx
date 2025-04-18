@@ -1,3 +1,7 @@
+import { useChatStore } from "@/stores/chatStore";
+import { deleteChat, fetchChats } from "@/util/api";
+import { getOtherUser } from "@/util/chats";
+import { connectSocket, getSocket } from "@/util/socket";
 import { getUser } from "@/util/storage";
 import { Ionicons, Feather, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -7,7 +11,28 @@ import { TouchableOpacity, View, Text, FlatList, Image } from "react-native";
 import { TextInput } from "react-native";
 
 export default function ChatsScreen() {
+    // const [chats, setChats] = useState([]);
+    const setChats = useChatStore(state => state.setChats);
+    const chats = useChatStore(state => state.chats);
+    const {
+        activeCategory,
+        setActiveCategory,
+        filteredChats,
+        setFilteredChats,
+        query,
+        setQuery,
+        isSearchActive,
+        setIsSearchActive,
+        selectionMode
+    } = useChatStore(state => state);
 
+
+    // const [activeCategory, setActiveCategory] = useState("All")
+    // const [filteredChats, setFilteredChats] = useState([])
+    // const [query, setQuery] = useState("");
+    // const [isSearchActive, setIsSearchActive] = useState(false);
+
+    const [user, setUser] = useState(null);
     const router = useRouter()
     const logout = async () => {
         await AsyncStorage.removeItem("user");
@@ -17,19 +42,88 @@ export default function ChatsScreen() {
 
     const getUserData = async () => {
         const userdata = await getUser();
-        console.log(userdata, 'userdata')
+        setUser(userdata);
     }
 
     useEffect(() => {
         getUserData();
-    })
+    }, [])
+
+    const loadChats = async () => {
+        const response_data = await fetchChats(user._id);
+
+        setChats(response_data);
+    }
+
+    const applyFilters = () => {
+        if (!user?._id) return;
+
+        let filtered = Array.isArray(chats) ? [...chats] : []; //Clone
+
+        if (activeCategory == "Unread") {
+            filtered = filtered.filter(chat => Object.values(chat.unreadCounts).reduce((acc, val) => (acc + val), 0) > 0)
+        }
+
+
+
+        if (query.trim()) {
+            filtered = filtered.filter(chat => getOtherUser(chat, user._id)?.phone.includes(query))
+        }
+
+        setFilteredChats(filtered);
+    }
+
+    useEffect(() => {
+        if (!user?._id) return;
+
+        loadChats();
+
+        if (getSocket()?.connected) {
+            return;
+        }
+
+        connectSocket(user._id, () => {
+            const socket = getSocket();
+            if (!socket) return;
+
+            socket.on("receive-message", ({ message, conversation, isNew }) => {
+                const prevChats = useChatStore.getState().chats || [];
+                const exists = prevChats.some(c => c._id == conversation._id)
+
+                if (exists) {
+                    const formattedChats = prevChats.map(chat => {
+                        if (chat._id == conversation._id) {
+                            return conversation;
+                        }
+                        return chat;
+                    })
+                    useChatStore.getState().setChats(formattedChats)
+                } else {
+                    useChatStore.getState().setChats([...chats, conversation])
+                }
+            })
+        })
+
+    }, [user]);
+
+    useEffect(() => {
+        applyFilters();
+    }, [chats, activeCategory, query])
+
+    const onCancel = () => {
+        setIsSearchActive(false)
+        setQuery("")
+    }
+
+    const onSearch = (text) => {
+        setQuery(text)
+    }
 
 
 
     return <>
-        <Header />
-
-        <ChatList />
+        { selectionMode ? <ChatActionBar /> : (isSearchActive ? <ActiveSearchBar onSearch={onSearch} onCancel={onCancel} /> : <Header/>)}
+        <ChatList user={user} />
     </>
 }
 
@@ -52,17 +146,23 @@ function Header() {
 
 function SearchBar() {
     {/* Search Bar */ }
+    const { setIsSearchActive, isSearchActive } = useChatStore(state => state);
+
+
+    if (isSearchActive) return;
     return (
         <View className="mx-4 mb-3 flex-row items-center bg-gray-200 rounded-full px-4 py-2">
             <Ionicons name="search" size={20} color="gray" />
-            <TextInput className="ml-2 flex-1 text-md" placeholder="Ask Meta AI or Search" placeholderTextColor="gray" />
+            <TextInput onPress={() => setIsSearchActive(true)} className="ml-2 flex-1 text-md" placeholder="Ask Meta AI or Search" placeholderTextColor="gray" />
         </View>
     )
 }
 
 function CategoryTabs() {
+    const { activeCategory, setActiveCategory } = useChatStore(state => state);
+
     const categories = ["All", "Unread", "Favorities", "Groups"];
-    const [activeCategory, setActiveCategory] = useState("All")
+
     {/* Category Tabs */ }
     return (
         <View className="flex-row px-4 mb-3 gap-5">
@@ -75,155 +175,187 @@ function CategoryTabs() {
     )
 }
 
-function ChatList() {
-    const dummyChats = [
-        {
-            _id: 1,
-            name: "John Doe",
-            message: "Hi how are u?",
-            avatar: "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png?20200919003010",
-            createdAt: "10:45 AM",
-            unread: 2
-        },
-        {
-            _id: 2,
-            name: "Jane Smith",
-            message:"Let's go for movie",
-            avatar: "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png?20200919003010",
-            createdAt: "09:20 AM",
-            unread: 3
-        },
-        {
-            _id: 3,
-            name: "Alice",
-            message:"Finished the Assignment?Finished the Assignment?Finished the Assignment?Finished the Assignment?",
-            avatar: "https://upload.wikimedia.org/wikipedia/en/a/a9/Example.jpg?20240301091138",
-            createdAt: "02:45 PM",
-            unread: 0
-        },
-        {
-            _id: 5,
-            name: "John Doe",
-            message: "Hi how are u?",
-            avatar: "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png?20200919003010",
-            createdAt: "10:45 AM",
-            unread: 2
-        },
-        {
-            _id: 6,
-            name: "Jane Smith",
-            message:"Let's go for movie",
-            avatar: "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png?20200919003010",
-            createdAt: "09:20 AM",
-            unread: 3
-        },
-        {
-            _id: 7,
-            name: "Alice",
-            message:"Finished the Assignment?Finished the Assignment?Finished the Assignment?Finished the Assignment?",
-            avatar: "https://upload.wikimedia.org/wikipedia/en/a/a9/Example.jpg?20240301091138",
-            createdAt: "02:45 PM",
-            unread: 0
-        },
-        {
-            _id: 8,
-            name: "John Doe",
-            message: "Hi how are u?",
-            avatar: "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png?20200919003010",
-            createdAt: "10:45 AM",
-            unread: 2
-        },
-        {
-            _id: 9,
-            name: "Jane Smith",
-            message:"Let's go for movie",
-            avatar: "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png?20200919003010",
-            createdAt: "09:20 AM",
-            unread: 3
-        },
-        {
-            _id: 10,
-            name: "Alice",
-            message:"Finished the Assignment?Finished the Assignment?Finished the Assignment?Finished the Assignment?",
-            avatar: "https://upload.wikimedia.org/wikipedia/en/a/a9/Example.jpg?20240301091138",
-            createdAt: "02:45 PM",
-            unread: 0
-        },
-        {
-            _id: 11,
-            name: "John Doe",
-            message: "Hi how are u?",
-            avatar: "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png?20200919003010",
-            createdAt: "10:45 AM",
-            unread: 2
-        },
-        {
-            _id: 12,
-            name: "Jane Smith",
-            message:"Let's go for movie",
-            avatar: "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png?20200919003010",
-            createdAt: "09:20 AM",
-            unread: 3
-        },
-        {
-            _id: 13,
-            name: "Alice",
-            message:"Finished the Assignment?Finished the Assignment?Finished the Assignment?Finished the Assignment?",
-            avatar: "https://upload.wikimedia.org/wikipedia/en/a/a9/Example.jpg?20240301091138",
-            createdAt: "02:45 PM",
-            unread: 0
-        },
-    ];
+function ChatList({ user }) {
+    const { filteredChats, setSelectionMode, selectionMode, selectedChats, setSelectedChats } = useChatStore(state => state)
 
-    return  <View className="bg-white"> 
-        {dummyChats.length > 0 ? <FlatList
-       contentContainerStyle={{
-        paddingBottom:100
-       }}
-        ListHeaderComponent={() => (<>
-          <SearchBar />
-          <CategoryTabs />
-        </>)}
+    useEffect(() => {
+        if (!(selectedChats.length > 0)) {
+            setSelectionMode(false)
+        }
+    }, [selectedChats])
 
-        ListFooterComponent={() => (
-            <View className="py-6 items-center justify-center">
-                <MaterialCommunityIcons name="lock-outline" size={16} color={"gray"} />
-                <Text className="text-gray-500 text-xs mt-2">Your Personal messages are not end to end encrypted</Text>
-            </View>
-        )}
-        data={dummyChats}
-        keyExtractor={(item) => item._id.toString()}
-        renderItem={({ item }) => (
-            <TouchableOpacity className="flex-row items-center px-4 py-3">
-                <Image className="h-12 w-12 rounded-full" source={{ uri: item.avatar }} />
-                <View className="flex-1 ml-4">
-                    <View className="flex-row justify-between">
-                        <Text className="text-lg font-semibold text-black ">{item.name}</Text>
-                        <Text className="text-xs text-gray-500">{item.createdAt}</Text>
-                    </View>
-                    <View className="flex-row justify-between">
-                        <Text numberOfLines={1} className="text-md text-gray-500 flex-1">{item.message}</Text>
-                        {item.unread > 0 && <View className="bg-green-600 min-w-[20px] rounded-full items-center justify-center px-2 ml-2">
-                            <Text className="text-white text-xs font-bold">{item.unread}</Text>
-                        </View>}
-                    </View>
+
+
+    if (!user) return;
+
+    const focusConversation = (chat, focused) => {
+        const socket = getSocket();
+        if (!socket || !user._id) return;
+
+        if (focused) {
+            socket.emit("focus-conversation", chat._id);
+            useChatStore.getState().focusChat(chat._id);
+        }
+    }
+
+    const formatChat = (conv) => {
+        if (!conv || !user) return;
+        const otherUser = getOtherUser(conv, user._id)
+
+        return {
+            ...conv,
+            name: otherUser?.phone,
+            message: conv?.lastMessage?.text,
+            unread: conv?.unreadCounts[user._id],
+            createdAt: new Date(conv?.lastMessage?.createdAt).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit"
+            }),
+            avatar: otherUser?.profileImage || "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png?20200919003010"
+        }
+    }
+
+    const formattedData = filteredChats.map(chat => formatChat(chat))
+
+    function selectChat(chat) {
+        if (!selectionMode) {
+            setSelectionMode(true)
+        }
+
+        const prevChats = selectedChats;
+        const exists = prevChats.some(c => c._id == chat._id);
+        if (!exists) {
+            setSelectedChats([...prevChats, chat])
+        }
+    }
+
+    function tapChat(chat) {
+        if (selectionMode) {
+            const prevChats = selectedChats;
+            const exists = prevChats.some(c => c._id == chat._id);
+            if (exists) {
+                const filteredSelectedChats = prevChats.filter(c => c._id !== chat._id);
+                setSelectedChats(filteredSelectedChats)
+            } else {
+                setSelectedChats([...prevChats, chat])
+            }
+        } else {
+            focusConversation(chat, true)
+        }
+    }
+
+    function isChatSelected(chat) {
+        return selectedChats.some(c => c._id == chat._id);
+    }
+
+
+
+
+
+    return <View className="bg-white flex-1">
+        {formattedData.length > 0 ? <FlatList
+            contentContainerStyle={{
+                paddingBottom: 100
+            }}
+            ListHeaderComponent={() => (<>
+                <SearchBar />
+                <CategoryTabs />
+            </>)}
+
+            ListFooterComponent={() => (
+                <View className="py-6 items-center justify-center">
+                    <MaterialCommunityIcons name="lock-outline" size={16} color={"gray"} />
+                    <Text className="text-gray-500 text-xs mt-">Your Personal messages are not end to end encrypted</Text>
                 </View>
-            </TouchableOpacity>
-        )}
-    />: <EmptyChats/>}
-    </View> 
+            )}
+            data={formattedData}
+            keyExtractor={(item) => item._id.toString()}
+            renderItem={({ item }) => (
+                <TouchableOpacity
+                    onLongPress={() => selectChat(item)}
+                    onPress={() => tapChat(item)}
+                    className={`flex-row items-center px-4 py-3 ${selectionMode && isChatSelected(item) ? 'bg-green-200' : ""}`}>
+                    <Image className="h-12 w-12 rounded-full" source={{ uri: item.avatar }} />
+                    <View className="flex-1 ml-4 ">
+                        <View className="flex-row justify-between">
+                            <Text className="text-lg font-semibold text-black ">{item.name}</Text>
+                            <Text className="text-xs text-gray-500">{item.createdAt}</Text>
+                        </View>
+                        <View className="flex-row justify-between">
+                            <Text numberOfLines={1} className="text-md text-gray-500 flex-1">{item.message}</Text>
+                            {item.unread > 0 && <View className="bg-green-600 min-w-[20px] rounded-full items-center justify-center px-2 ml-2">
+                                <Text className="text-white text-xs font-bold">{item.unread}</Text>
+                            </View>}
+                        </View>
+                    </View>
+                </TouchableOpacity>
+            )}
+        /> : <>
+            <SearchBar />
+            <CategoryTabs />
+            <EmptyChats />
+        </>}
+    </View>
 }
 
 
 function EmptyChats() {
     return (
-        <View className="flex-1 items-center justify-center bg-white p-6">
-            <MaterialIcons name="chat-bubble-outline" size={100} /> 
-            <Text  className="text-xl font-semibold mt-6">Start Chatting on ChatApp</Text>
-            <Text  className="text-center text-gray-500 mt-2">Tap the message icon below to start a new conversation</Text>
+        <View className=" flex-1 items-center justify-center bg-white p-6">
+            <MaterialIcons name="chat-bubble-outline" size={100} />
+            <Text className="text-xl font-semibold mt-6">Start Chatting on ChatApp</Text>
+            <Text className="text-center text-gray-500 mt-2">Tap the message icon below to start a new conversation</Text>
             <TouchableOpacity className="absolute bottom-6 right-6 bg-green-500 rounded-full p-4">
-                <MaterialIcons name="message" size={28}  color={"white"}/>
+                <MaterialIcons name="message" size={28} color={"white"} />
             </TouchableOpacity>
         </View>
     )
+}
+
+function ActiveSearchBar({ onSearch, onCancel }) {
+    return <View className="bg-white">
+        <View className="flex-row items-center bg-gray-200 rounded-full px-4 mx-4 py-2 my-3">
+            <TouchableOpacity onPress={() => onCancel()}>
+                <Ionicons name="arrow-back" size={24} color="gray" />
+            </TouchableOpacity>
+            <TextInput
+                onChangeText={text => onSearch(text)}
+                autoFocus
+                placeholder="Search..."
+                className="ml-3 flex-1 text-base text-black outline-none"
+            />
+        </View>
+    </View>
+
+}
+
+function ChatActionBar() {
+
+     const { selectionMode, setSelectionMode, setSelectedChats, selectedChats, chats, setChats}  = useChatStore(state => state);
+
+    const deleteSelectedChats = async () => {
+        const ids = selectedChats.map( chat => chat._id);
+        await deleteChat(ids);
+        setSelectedChats([]);
+        setSelectionMode(false);
+        const filteredChats = chats.filter( c => !ids.includes( c._id ));
+        setChats(filteredChats)
+    }
+    return <View className="bg-white">
+        <View className="flex-row justify-between p-3 bg-gray-200 mb-4">
+            <View>
+                <TouchableOpacity onPress={() => {setSelectionMode(false);  setSelectedChats([]); } }  >
+                    <Ionicons name="arrow-back" size={24} />
+                </TouchableOpacity>
+            </View>
+            <View className="flex-row gap-3">
+                <TouchableOpacity onPress={deleteSelectedChats} >
+                    <Ionicons name="trash-outline" size={24} />
+                </TouchableOpacity>
+                <TouchableOpacity >
+                    <Feather size={24} name="more-vertical" />
+                </TouchableOpacity>
+            </View>
+        </View>
+    </View>
 }
