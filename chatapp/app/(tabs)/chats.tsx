@@ -9,6 +9,10 @@ import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { TouchableOpacity, View, Text, FlatList, Image } from "react-native";
 import { TextInput } from "react-native";
+import { showErrorToast } from '../../util/toast';
+
+
+
 
 export default function ChatsScreen() {
     // const [chats, setChats] = useState([]);
@@ -33,6 +37,7 @@ export default function ChatsScreen() {
     // const [isSearchActive, setIsSearchActive] = useState(false);
 
     const [user, setUser] = useState(null);
+    const [error, setError] = useState(null);
     const router = useRouter()
     const logout = async () => {
         await AsyncStorage.removeItem("user");
@@ -50,9 +55,14 @@ export default function ChatsScreen() {
     }, [])
 
     const loadChats = async () => {
-        const response_data = await fetchChats(user._id);
+        try {
+            const response_data = await fetchChats(user._id);
+            setChats(response_data);
+        } catch (error) {
+            setError(error.message);
+            showErrorToast("Unable to Fetch Chats. Please Try again.");
 
-        setChats(response_data);
+        }
     }
 
     const applyFilters = () => {
@@ -122,8 +132,9 @@ export default function ChatsScreen() {
 
 
     return <>
-        { selectionMode ? <ChatActionBar /> : (isSearchActive ? <ActiveSearchBar onSearch={onSearch} onCancel={onCancel} /> : <Header/>)}
+        {selectionMode ? <ChatActionBar /> : (isSearchActive ? <ActiveSearchBar onSearch={onSearch} onCancel={onCancel} /> : <Header />)}
         <ChatList user={user} />
+        {error && <Text style={{ color: 'red' }}>{error}</Text>}  {/* Display the error message */}
     </>
 }
 
@@ -331,20 +342,20 @@ function ActiveSearchBar({ onSearch, onCancel }) {
 
 function ChatActionBar() {
 
-     const { selectionMode, setSelectionMode, setSelectedChats, selectedChats, chats, setChats}  = useChatStore(state => state);
+    const { selectionMode, setSelectionMode, setSelectedChats, selectedChats, chats, setChats } = useChatStore(state => state);
 
     const deleteSelectedChats = async () => {
-        const ids = selectedChats.map( chat => chat._id);
+        const ids = selectedChats.map(chat => chat._id);
         await deleteChat(ids);
         setSelectedChats([]);
         setSelectionMode(false);
-        const filteredChats = chats.filter( c => !ids.includes( c._id ));
+        const filteredChats = chats.filter(c => !ids.includes(c._id));
         setChats(filteredChats)
     }
     return <View className="bg-white">
         <View className="flex-row justify-between p-3 bg-gray-200 mb-4">
             <View>
-                <TouchableOpacity onPress={() => {setSelectionMode(false);  setSelectedChats([]); } }  >
+                <TouchableOpacity onPress={() => { setSelectionMode(false); setSelectedChats([]); }}  >
                     <Ionicons name="arrow-back" size={24} />
                 </TouchableOpacity>
             </View>

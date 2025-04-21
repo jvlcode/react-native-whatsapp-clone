@@ -6,11 +6,14 @@ import dotenv from "dotenv";
 import path from "path"
 import { Server } from "socket.io";
 import registerSocketHandlers from "./socket.js";
+import cors from "cors"
 
 dotenv.config();
 
 const app = express();
 app.use(express.json())
+
+app.use(cors())
 
 app.use("/uploads",express.static(path.join(process.cwd(), "uploads")))
 

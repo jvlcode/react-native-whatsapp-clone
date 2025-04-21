@@ -1,7 +1,7 @@
 import axios from 'axios'
 import Constants from "expo-constants"
 
-const API_URL = Constants.expoConfig?.extra?.API_URL || "http://192.168.29.32:5000/api"; 
+const API_URL = Constants.expoConfig?.extra?.API_URL || "http://192.168.1.5:5000/api"; 
 
 export const fetchUser = async (phone) => {
     try {
@@ -31,6 +31,7 @@ export const saveUser = async (formData) => {
         return response.data
     } catch (error) {
         console.log("saveUser API error",error)
+       
     }
 }
 
@@ -39,8 +40,8 @@ export const fetchChats = async (userId) => {
         const response = await axios.get(`${API_URL}/conversations/${userId}`)
         return response.data
     } catch (error) {
-        console.log(error,'response_data')
         console.log("fetchUser API error", error)
+        throw new Error("API error")
     }
 }
 
