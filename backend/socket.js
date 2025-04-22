@@ -62,7 +62,7 @@ export default function registerSocketHandlers(io) {
                     return user;
                 })
                 socket.to(otherUserId).emit("receive-message", {
-                    text,
+                    message,
                     conversation,
                     isNew
                 })

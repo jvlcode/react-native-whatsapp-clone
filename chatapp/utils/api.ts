@@ -1,7 +1,7 @@
 import axios from 'axios'
 import Constants from "expo-constants"
 
-const API_URL = Constants.expoConfig?.extra?.API_URL || "http://192.168.1.5:5000/api"; 
+const API_URL = Constants.expoConfig?.extra?.API_URL; 
 
 export const fetchUser = async (phone) => {
     try {
@@ -59,7 +59,7 @@ export const deleteChat = async (ids) => {
 
 export const fetchMessages = async (chatId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/messages/${chatId}`);
+      const response = await fetch(`${API_URL}/messages/${chatId}`);
       if (!response.ok) {
         throw new Error("Failed to fetch messages");
       }

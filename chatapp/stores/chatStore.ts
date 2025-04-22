@@ -9,6 +9,7 @@ interface Chat {
 
 interface ChatState {
     chats: Chat[],
+    currentChat: Chat|null,
     setChats: (chats: Chat[]) => void,
     getUnreadChatCount: () => number,
     focusChat: (chatId:string) => void,
@@ -31,10 +32,12 @@ function isUnread(unreadCounts:Object) {
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
+    currentChat:null,
     focusChat: (chatId:string) => { 
         const prevChats = get().chats
         const formattedChats = prevChats.map(chat => {
            if ( chat._id == chatId ) {
+                set({currentChat:chat})
                 return { ...chat, unreadCounts: {}}
            }
            return chat;

@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import userRoutes from "./routes/userRoutes.js"
 import conversationRoutes from "./routes/conversationRoutes.js"
+import messageRoutes from "./routes/messageRoutes.js"
 import dotenv from "dotenv";
 import path from "path"
 import { Server } from "socket.io";
@@ -28,6 +29,7 @@ app.get('/', (req, res) => {
 
 app.use("/api/users", userRoutes);
 app.use("/api/conversations", conversationRoutes);
+app.use("/api/messages", messageRoutes);
 
 const server = app.listen(5000, () => { console.log("Server running on port 5000!")})
 

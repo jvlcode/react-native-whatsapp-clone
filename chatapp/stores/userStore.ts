@@ -21,7 +21,6 @@ export const useUserStore = create<UserState>((set, get) => ({
   setUser: (user) => set({user}),
 
   loadUser: async () => {
-    console.log("TEST")
     const storedUser = await getUser();
     if (storedUser) {
       set({ user: storedUser });

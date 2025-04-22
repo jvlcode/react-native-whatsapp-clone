@@ -5,11 +5,11 @@ import { connectSocket, getSocket } from "@/utils/socket";
 import { getUser } from "@/utils/storage";
 import { Ionicons, Feather, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { router, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { TouchableOpacity, View, Text, FlatList, Image } from "react-native";
 import { TextInput } from "react-native";
-import { showErrorToast } from '../../utils/toast';
+import { showErrorToast } from '@/utils/toast';
 
 
 
@@ -207,6 +207,8 @@ function ChatList({ user }) {
             socket.emit("focus-conversation", chat._id);
             useChatStore.getState().focusChat(chat._id);
         }
+
+        router.push(`/chats/${chat._id}`)
     }
 
     const formatChat = (conv) => {
