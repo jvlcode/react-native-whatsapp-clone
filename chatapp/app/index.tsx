@@ -2,7 +2,7 @@ import { Text, Image,View, TouchableOpacity, ActivityIndicator } from "react-nat
 import "../global.css"
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { getUser } from "@/util/storage";
+import { getUser } from "@/utils/storage";
 
 export default function WelcomeScreen() {
 

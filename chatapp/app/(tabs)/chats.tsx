@@ -1,15 +1,15 @@
 import { useChatStore } from "@/stores/chatStore";
-import { deleteChat, fetchChats } from "@/util/api";
-import { getOtherUser } from "@/util/chats";
-import { connectSocket, getSocket } from "@/util/socket";
-import { getUser } from "@/util/storage";
+import { deleteChat, fetchChats } from "@/utils/api";
+import { getOtherUser } from "@/utils/chats";
+import { connectSocket, getSocket } from "@/utils/socket";
+import { getUser } from "@/utils/storage";
 import { Ionicons, Feather, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { TouchableOpacity, View, Text, FlatList, Image } from "react-native";
 import { TextInput } from "react-native";
-import { showErrorToast } from '../../util/toast';
+import { showErrorToast } from '../../utils/toast';
 
 
 

@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import * as ImagePicker  from "expo-image-picker";
 import { View, Text, TouchableOpacity, Image, TextInput, Alert, ActivityIndicator, BackHandler } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { fetchUser, saveUser as saveUserAPI, updateUser } from "@/util/api";
-import { saveUser as saveUserStorage } from "@/util/storage";
+import { fetchUser, saveUser as saveUserAPI, updateUser } from "@/utils/api";
+import { saveUser as saveUserStorage } from "@/utils/storage";
 
 export default function AccountSetupScreen() {
     const [name, setName] = useState("");

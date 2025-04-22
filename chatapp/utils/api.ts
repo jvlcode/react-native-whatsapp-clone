@@ -56,3 +56,16 @@ export const deleteChat = async (ids) => {
         console.log("deleteChat  API error", error)
     }
 }
+
+export const fetchMessages = async (chatId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/messages/${chatId}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch messages");
+      }
+      return await response.json();
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      return [];
+    }
+};
