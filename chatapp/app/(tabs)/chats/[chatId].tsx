@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { fetchMessages } from "@/utils/api";
+import { deleteMessages, fetchMessages } from "@/utils/api";
 import { useUserStore } from "@/stores/userStore";
 import { useChatStore } from "@/stores/chatStore";
 import { connectSocket, getSocket } from "@/utils/socket";
@@ -187,6 +187,13 @@ export default function ChatScreen() {
     setSelectionMode(false)
   }
 
+  const deleteSelectedMessages = async() => {
+    const selectedIds = selectedMessages.map((el) => el._id);
+    await deleteMessages(selectedIds)
+    setMessages((prev) => prev.filter((msg) => !selectedIds.includes(msg._id)));
+    setSelectedMessages([]);
+  }
+
   return (
     <>
       {/* Hide Tabs */}
@@ -218,11 +225,7 @@ export default function ChatScreen() {
 
             <TouchableOpacity
               className="mx-2"
-              onPress={() => {
-                const selectedIds = selectedMessages.map((el) => el._id);
-                setMessages((prev) => prev.filter((msg) => !selectedIds.includes(msg._id)));
-                setSelectedMessages([]);
-              }}
+              onPress={deleteSelectedMessages}
             >
               <MaterialIcons name="delete" size={22} color="black" />
             </TouchableOpacity>

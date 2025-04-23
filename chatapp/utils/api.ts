@@ -69,3 +69,15 @@ export const fetchMessages = async (chatId) => {
       return [];
     }
 };
+
+export const deleteMessages = async (ids) => {
+    try {
+        const response = await axios.delete(`${API_URL}/messages`, {
+            data: { ids },
+        });
+        return response.data;
+    } catch (error) {
+        console.error("deleteMessages API error", error);
+        throw error;
+    }
+};
