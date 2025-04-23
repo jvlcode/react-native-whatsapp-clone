@@ -19,7 +19,6 @@ import { useUserStore } from "@/stores/userStore";
 import { useChatStore } from "@/stores/chatStore";
 import { connectSocket, getSocket } from "@/utils/socket";
 import { getOtherUser } from "@/utils/chats";
-import { create } from "zustand";
 
 export default function ChatScreen() {
   const { chatId } = useLocalSearchParams(); // optional for dynamic routing

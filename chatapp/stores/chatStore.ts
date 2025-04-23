@@ -31,7 +31,7 @@ interface ChatState {
 function isUnread(unreadCounts:Object) {
     const user = useUserStore.getState().user;
     if(!user) return
-    return Object.entries(unreadCounts).some((count, uid) => uid == user._id &&  count > 0)
+    return Object.entries(unreadCounts).some(([uid, count]) => uid == user._id &&  count > 0)
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
