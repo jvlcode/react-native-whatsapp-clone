@@ -1,4 +1,5 @@
 import { create } from "zustand"
+import { useUserStore } from "./userStore"
 
 interface Chat {
     _id:string,
@@ -28,7 +29,9 @@ interface ChatState {
 }
 
 function isUnread(unreadCounts:Object) {
-    return Object.values(unreadCounts).some(val => val > 0)
+    const user = useUserStore.getState().user;
+    if(!user) return
+    return Object.entries(unreadCounts).some((count, uid) => uid == user._id &&  count > 0)
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
