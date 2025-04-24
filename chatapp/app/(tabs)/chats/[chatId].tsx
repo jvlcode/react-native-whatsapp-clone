@@ -19,6 +19,7 @@ import { useUserStore } from "@/stores/userStore";
 import { useChatStore } from "@/stores/chatStore";
 import { connectSocket, getSocket } from "@/utils/socket";
 import { getOtherUser } from "@/utils/chats";
+import { DEFAULT_USER_IMAGE, getImageUrl } from "@/utils/image";
 
 export default function ChatScreen() {
   const { chatId } = useLocalSearchParams(); // optional for dynamic routing
@@ -248,7 +249,7 @@ export default function ChatScreen() {
             </TouchableOpacity>
             <Image
               source={{
-                uri: "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png?20200919003010",
+                uri: otherParticipant?.profileImage ? getImageUrl(otherParticipant?.profileImage) : DEFAULT_USER_IMAGE,
               }}
               className="w-10 h-10 rounded-full mx-2"
             />
