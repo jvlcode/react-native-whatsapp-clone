@@ -68,7 +68,7 @@ export default function ChatScreen() {
   }, [messages])
 
   // Inside your component
-  useEffect(() => {
+  useFocusEffect(() => {
 
     if (!user?._id || !chat) return;
 
