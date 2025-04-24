@@ -15,13 +15,13 @@ router.get("/:userId", async (req, res) => {
         .populate("lastMessage")
         .sort({updateAt:-1})
 
-        conversations = conversations.map( conv => {
-            conv.participants.map((user) => {
-                user.profileImage =   user.profileImage ? `${req.protocol}://${req.get('host')}${user.profileImage}`:null
-                return user;
-            })
-            return conv;
-        })
+        // conversations = conversations.map( conv => {
+        //     conv.participants.map((user) => {
+        //         user.profileImage =   user.profileImage ? `${req.protocol}://${req.get('host')}${user.profileImage}`:null
+        //         return user;
+        //     })
+        //     return conv;
+        // })
 
         
 

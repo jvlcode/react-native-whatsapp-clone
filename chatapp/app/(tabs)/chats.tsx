@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { TouchableOpacity, View, Text, FlatList, Image } from "react-native";
 import { TextInput } from "react-native";
 import { showErrorToast } from '@/utils/toast';
+import { getImageUrl } from "@/utils/image";
 
 
 
@@ -224,7 +225,7 @@ function ChatList({ user }) {
                 hour: "2-digit",
                 minute: "2-digit"
             }),
-            avatar: otherUser?.profileImage || "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png?20200919003010"
+            avatar: otherUser?.profileImage ? getImageUrl(otherUser?.profileImage) : "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png?20200919003010"
         }
     }
 
