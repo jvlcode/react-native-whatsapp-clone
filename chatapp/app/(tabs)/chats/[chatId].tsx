@@ -96,6 +96,7 @@ export default function ChatScreen() {
         setMessages(state => [...state, message]);
         socket.emit("focus-conversation", chat._id);
         useChatStore.getState().focusChat(chat._id);
+        updateLastMessage(message)
       })
     }else {
       connectSocket(user._id)
@@ -142,6 +143,7 @@ export default function ChatScreen() {
     });
 
     setMessages((prev) => [...prev, newMessage]);
+    updateLastMessage(newMessage)
     setInputText("");
     setReplyTo(null);
   };
@@ -188,6 +190,12 @@ export default function ChatScreen() {
     setSelectionMode(false)
   }
 
+  function updateLastMessage(lastMessage) {
+    const prevChats = useChatStore.getState().chats;
+    const updatedChats = prevChats.map((c) => c._id == chat._id ? {...chat, lastMessage}:chat  )
+    useChatStore.getState().setChats(updatedChats)
+  }
+
   const deleteSelectedMessages = async() => {
     const selectedIds = selectedMessages.map((el) => el._id);
     const { chat:updatedChat } = await deleteMessages(chat._id, selectedIds)
@@ -195,9 +203,7 @@ export default function ChatScreen() {
     setSelectedMessages([]);
 
     //update chat
-    const prevChats = useChatStore.getState().chats;
-    const updatedChats = prevChats.map((chat) => chat._id == updatedChat._id ? updatedChat:chat  )
-    useChatStore.getState().setChats(updatedChats)
+    updateLastMessage(updatedChat.lastMessage);
   }
 
   return (
