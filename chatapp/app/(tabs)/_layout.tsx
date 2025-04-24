@@ -46,9 +46,7 @@ export default function TabLayout() {
                     break;
             
                 default:
-                    title = "Home"
-                    iconName = "home"
-                    break;
+                    return null; 
             }
 
             const iconColor = focused ? "#075E54" : "black";
@@ -76,6 +74,12 @@ export default function TabLayout() {
        })}
     >
         <Tabs.Screen name="chats"/>
+        <Tabs.Screen
+            name="chats/[chatId]"
+            options={{
+                href: null, // Hide from bottom tab
+            }}
+        />
         <Tabs.Screen name="updates"/>
         <Tabs.Screen name="communities" />
         <Tabs.Screen name="calls" />
