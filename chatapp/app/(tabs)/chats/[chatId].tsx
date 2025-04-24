@@ -12,7 +12,7 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { deleteMessages, fetchMessages } from "@/utils/api";
 import { useUserStore } from "@/stores/userStore";
@@ -83,25 +83,30 @@ export default function ChatScreen() {
     if (chatId) {
       loadMessages();
     }
-   
+
   }, [chatId, user]);
 
-  useEffect(() => {
+  useFocusEffect(() => {
     if (!user?._id) return;
-    if (getSocket()?.connected) {
-      const socket = getSocket();
-      if (!socket) return;
 
-      socket.on("receive-message", ({message}) => {
-        setMessages(state => [...state, message]);
-        socket.emit("focus-conversation", chat._id);
-        useChatStore.getState().focusChat(chat._id);
-        updateLastMessage(message)
-      })
-    }else {
-      connectSocket(user._id)
+    const socket = getSocket();
+    if (!socket?.connected) {
+      connectSocket(user._id);
+      return;
     }
-  }, [])
+
+    const handler = ({ message }) => {
+      setMessages(state => [...state, message]);
+      socket.emit("focus-conversation", chat._id);
+      useChatStore.getState().focusChat(chat._id);
+      updateLastMessage(message)
+    }
+    socket.on("receive-message", handler)
+    return () => {
+      console.log("TEST")
+      socket.off("receive-message", handler); // Cleanup when screen is unfocused/unmounted
+    };
+  })
 
 
   function formatMessage(message) {
@@ -192,13 +197,13 @@ export default function ChatScreen() {
 
   function updateLastMessage(lastMessage) {
     const prevChats = useChatStore.getState().chats;
-    const updatedChats = prevChats.map((c) => c._id == chat._id ? {...chat, lastMessage}:chat  )
+    const updatedChats = prevChats.map((c) => c._id == chat._id ? { ...chat, lastMessage } : chat)
     useChatStore.getState().setChats(updatedChats)
   }
 
-  const deleteSelectedMessages = async() => {
+  const deleteSelectedMessages = async () => {
     const selectedIds = selectedMessages.map((el) => el._id);
-    const { chat:updatedChat } = await deleteMessages(chat._id, selectedIds)
+    const { chat: updatedChat } = await deleteMessages(chat._id, selectedIds)
     setMessages((prev) => prev.filter((msg) => !selectedIds.includes(msg._id)));
     setSelectedMessages([]);
 

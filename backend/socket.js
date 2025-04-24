@@ -57,10 +57,10 @@ export default function registerSocketHandlers(io) {
 
 
                 await conversation.save();
-                conversation.participants = conversation.participants.map((user) => {
-                    user.profileImage =   user.profileImage ? `http://192.168.29.32:5000${user.profileImage}`:null
-                    return user;
-                })
+                // conversation.participants = conversation.participants.map((user) => {
+                //     user.profileImage =   user.profileImage ? `http://192.168.29.32:5000${user.profileImage}`:null
+                //     return user;
+                // })
                 socket.to(otherUserId).emit("receive-message", {
                     message,
                     conversation,
