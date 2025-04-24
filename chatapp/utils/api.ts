@@ -70,9 +70,9 @@ export const fetchMessages = async (chatId) => {
     }
 };
 
-export const deleteMessages = async (ids) => {
+export const deleteMessages = async (chatId, ids) => {
     try {
-        const response = await axios.delete(`${API_URL}/messages`, {
+        const response = await axios.delete(`${API_URL}/messages/${chatId}`, {
             data: { ids },
         });
         return response.data;

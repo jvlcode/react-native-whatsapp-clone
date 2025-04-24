@@ -189,9 +189,14 @@ export default function ChatScreen() {
 
   const deleteSelectedMessages = async() => {
     const selectedIds = selectedMessages.map((el) => el._id);
-    await deleteMessages(selectedIds)
+    const { chat:updatedChat } = await deleteMessages(chat._id, selectedIds)
     setMessages((prev) => prev.filter((msg) => !selectedIds.includes(msg._id)));
     setSelectedMessages([]);
+
+    //update chat
+    const prevChats = useChatStore.getState().chats;
+    const updatedChats = prevChats.map((chat) => chat._id == updatedChat._id ? updatedChat:chat  )
+    useChatStore.getState().setChats(updatedChats)
   }
 
   return (
