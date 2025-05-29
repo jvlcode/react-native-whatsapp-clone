@@ -1,6 +1,8 @@
+import Constants from "expo-constants";
 import { io, Socket } from "socket.io-client";
 
-const SERVER_URL = "http://192.168.29.32:5000"// use your LAN IP
+const SERVER_URL =  Constants.expoConfig?.extra?.BASE_URL; 
+// use your LAN IP
 
 let socket : Socket | null  = null;
 

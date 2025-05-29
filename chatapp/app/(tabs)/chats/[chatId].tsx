@@ -35,7 +35,7 @@ export default function ChatScreen() {
   const chat = useChatStore((s) => s.currentChat);
   const flatListRef = useRef<FlatList>(null);
 
-  if (!chat) return null
+  // if (!chat) return null
 
   const handleLongPress = (item) => {
     if (!selectionMode) {
@@ -84,7 +84,7 @@ export default function ChatScreen() {
       loadMessages();
     }
 
-  }, [chatId, user]);
+  });
 
   useFocusEffect(() => {
     if (!user?._id) return;
@@ -139,12 +139,12 @@ export default function ChatScreen() {
         : null,
     };
 
-
+    
 
     // ✅ Emit to backend
     socket.emit("send-message", {
       text: inputText,
-      otherUserId: otherParticipant._id
+      otherUserId:otherParticipant? otherParticipant._id : chatId
     });
 
     setMessages((prev) => [...prev, newMessage]);

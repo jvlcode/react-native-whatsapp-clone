@@ -319,7 +319,7 @@ function EmptyChats() {
             <MaterialIcons name="chat-bubble-outline" size={100} />
             <Text className="text-xl font-semibold mt-6">Start Chatting on ChatApp</Text>
             <Text className="text-center text-gray-500 mt-2">Tap the message icon below to start a new conversation</Text>
-            <TouchableOpacity className="absolute bottom-6 right-6 bg-green-500 rounded-full p-4">
+            <TouchableOpacity onPress={() => router.push("/contacts")} className="absolute bottom-6 right-6 bg-green-500 rounded-full p-4">
                 <MaterialIcons name="message" size={28} color={"white"} />
             </TouchableOpacity>
         </View>
